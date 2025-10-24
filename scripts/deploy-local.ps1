@@ -10,6 +10,8 @@ $env:AWS_ACCESS_KEY_ID     = "test"
 $env:AWS_SECRET_ACCESS_KEY = "test"
 $env:AWS_DEFAULT_REGION    = "eu-west-1"
 
+$env:AWS_S3_FORCE_PATH_STYLE = "true"
+
 # --- Check if LocalStack is running ---
 try {
     $health = Invoke-RestMethod -Uri "http://localhost:4566/_localstack/health" -TimeoutSec 3 -ErrorAction Stop
@@ -34,7 +36,7 @@ if (-not (Get-Command "cdklocal" -ErrorAction SilentlyContinue)) {
 
 # --- Bootstrap CDK (only needed once) ---
 Write-Host "Bootstrapping CDK for LocalStack..." -ForegroundColor Cyan
-$bootstrapOutput = cdklocal bootstrap 2>&1
+$bootstrapOutput = cdklocal bootstrap  aws://000000000000/eu-west-1 2>&1
 if ($bootstrapOutput -notmatch "Stack already exists") {
     Write-Host $bootstrapOutput
 }

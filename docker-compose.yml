@@ -1,21 +1,40 @@
 services:
   localstack:
-    container_name: "${LOCALSTACK_DOCKER_NAME:-localstack-main}"
-    image: localstack/localstack
+    container_name: localstack
+    image: localstack/localstack:latest
     ports:
-      - "127.0.0.1:4566:4566"            # LocalStack Gateway
-      - "127.0.0.1:4510-4559:4510-4559"  # external services port range
+      - "4566:4566"            # LocalStack Gateway
+      - "4510-4559:4510-4559"  # External services port range
     environment:
-      # LocalStack configuration: https://docs.localstack.cloud/references/configuration/
-      # - DEBUG=${DEBUG:-0}
+      # Core configuration
+      - SERVICES=s3,lambda,cloudformation,sts,iam,apigateway,dynamodb,cloudwatch,logs,events,sns,sqs
       - DEBUG=1
-      - SERVICES=cloudformation,s3,dynamodb,lambda,apigateway,cognito-idp,sns,sqs,sts,iam,ssm
-      - LAMBDA_EXECUTOR=local
-      - LOCALSTACK_HOST=localhost
-      - HOSTNAME_EXTERNAL=localhost
-      - S3_LOCALSTACK_HOST=localhost
-      - S3_SKIP_SIGNATURE_VALIDATION=1
-      - S3_ENDPOINT_STRATEGY=path
+      - LAMBDA_EXECUTOR=docker
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      
+      # CDK-specific configuration
+      - LOCALSTACK_HOST=localstack
+      - HOSTNAME_EXTERNAL=localstack
+      - HOSTNAME=localstack
+      
+      # Disable SSL for local development
+      - USE_SSL=0
+      
+      # Enable persistence (optional)
+      # - PERSISTENCE=1
+      # - DATA_DIR=/tmp/localstack/data
+      
+      # Performance settings
+      - LAMBDA_REMOVE_CONTAINERS=1
+      
     volumes:
-      - "${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack"
       - "/var/run/docker.sock:/var/run/docker.sock"
+      - "./lambdas:/tmp/lambdas"
+      # Uncomment for persistence
+      # - "./localstack-data:/tmp/localstack/data"
+    networks:
+      - localstack-network
+
+networks:
+  localstack-network:
+    driver: bridge
